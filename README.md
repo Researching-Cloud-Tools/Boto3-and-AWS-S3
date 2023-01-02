@@ -34,3 +34,17 @@
 ## Common Operations
 
 ### Creating a Bucket
+
+- Bucket name are DNS complaint so they must be unique throughout the WHOLE AWS PLATFORM. There's a error for that `botocore.errorfactory.BucketAlreadyExists`
+- If our region is not in the United States then we need to explicitly define our region while creating a bucket. or face the `IllegalLocationConstraintException` error
+
+  ```
+  s3_resource.create_bucket(Bucket=BUCKET_NAME, CreateBucketConfiguration={
+  "LocationConstraint": 'ap-south-1'
+  })
+  ```
+
+- we can also get the region programatically, by taking advantage of a session object.
+  - Boto3 will create the session from our credentials.
+  - We can then get the region from `boto3.session.Session().region_name()`
+  
