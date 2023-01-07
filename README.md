@@ -23,6 +23,11 @@
 - if in doubt follow [this tutorial](https://realpython.com/python-boto3-aws-s3/)
 - [Naming Convention for better use of S3](https://aws.amazon.com/blogs/aws/amazon-s3-performance-tips-tricks-seattle-hiring-event/)
 
+### Keywords:
+
+- `Object`: An object is a file and any metadata that describes that file.
+- `Object Key`: aka key name helps to uniquely identify the object in an Amazon S3 bucket.  
+
 ## Boto3
 
 - Boto3 calls the AWS APIs on our behalf and that's how it works at its core.
@@ -178,7 +183,7 @@ second_object.upload_file(second_file_name, ExtraArgs={
 
 - to see who has access to our object we have the grants attribute `second_object_acl.grants`
 
-- To make it private again, we don't need to re-upload it
+> To make it private again, we don't need to re-upload it
 
 ```py
 response = second_object_acl.put(ACL='private')
@@ -188,3 +193,50 @@ second_object_acl.grants
 > if we want to split our data into multiple categories, we can use tags. Then we can grant access to the objects based on their [tags](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-tagging.html)
 
 ### Encryption
+
+- with s3, we can protect our data using encryption.
+- There are various way to encrypt the data. Here, we'll see server side encryption with AES-256 algorithmn where AWS manages both the encryption and the keys.
+  - this is where the keys are managed and stored in AWS and using those keys the data are encrypted.
+  - we just upload the data and the encryption and key management is handled by AWS itself.
+
+```py
+third_file_name = create_temp_file(300, 'thirdfile.txt', 't')
+third_object = s3_resource.Object(first_bucket_name, third_file_name)
+third_object.upload_file(third_file_name, ExtraArgs={
+                         'ServerSideEncryption': 'AES256'})
+```
+
+- to see the encryption algorithm used `third_object.server_side_encryption`
+
+### Storage
+
+- Every object that we add to our S3 bucket is associated with a [storage class](https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html)
+- All of the following storage classes offer high durability.
+- we choose how we want to store our objects based on **our application's performance access requirements**.
+- Currently there are following storage classes with S3:
+
+1. **STANDARD**: default for frequently accessed data
+2. **STANDARD_IA**: for infrequently used data that needs to be retrieved rapidly when requested
+3. **ONEZONE_IA**: for the same use case as STANDARD_IA, but stores the data in one Availability Zone instead of three
+4. **REDUCED_REDUNDANCY**: for frequently used noncritical data that is easily reproducible
+
+> If we want to change the storage class of an exisitng object, we need to recreate the object and reupload the file
+
+```py
+third_object.upload_file(third_file_name, ExtraArgs={
+                         'ServerSideEncryption': 'AES256',
+                         'StorageClass': 'STANDARD_IA'})
+```
+
+> when we make changes to our object, our local instance doesn't show the changes, call `.reload()` to fetch the newest version of our object.
+
+```py
+third_object.reload()
+third_object.storage_class
+```
+
+> Use [LifeCycle Configurations](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lifecycle-mgmt.html) to transition objects through the different classes as you find the need for them. They will automatically transition these objects for you.
+
+### Versioning
+
+
