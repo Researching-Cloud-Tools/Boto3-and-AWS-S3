@@ -150,4 +150,41 @@ def copy_to_bucket(bucket_from_name, bucket_to_name, file_name):
 ### Deleting an Object
 
 - we can delete the file from bucket by calling `.delete()` on the equivalent Object instance.
-`s3_resource.Object(second_bucket_name, first_file_name).delete()`
+  `s3_resource.Object(second_bucket_name, first_file_name).delete()`
+
+## Advanced Configurations
+
+- we'll see some more S3 features
+
+### ACL (Access Control Lists)
+
+- ACL helps to manage access to our buckets and the objects within them.
+  - They are called the legacy way of administrating permissions to S3.
+- If we have to manage access to individual objects, then we would use an Object ACL.
+
+#### What happens when we upload an object to S3?
+
+- well, when we upload an object to S3, that object is private.
+- if we want to make this object available to someone else, then we can set the object's ACL to be public at creation time.
+
+```py
+second_file_name = create_temp_file(400, 'secondfile.txt', 's')
+second_object = s3_resource.Object(first_bucket.name, second_file_name)
+second_object.upload_file(second_file_name, ExtraArgs={
+                          'ACL': 'public-read'})
+```
+
+- we can get the Object Acl instance from the Object, as it is one of its sub-resource classes: `second_object_acl = second_object.Acl()`
+
+- to see who has access to our object we have the grants attribute `second_object_acl.grants`
+
+- To make it private again, we don't need to re-upload it
+
+```py
+response = second_object_acl.put(ACL='private')
+second_object_acl.grants
+```
+
+> if we want to split our data into multiple categories, we can use tags. Then we can grant access to the objects based on their [tags](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-tagging.html)
+
+### Encryption
